@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+.pytest_cache/
+
+# Runtime & Persistent Data
+data/
+cookies.txt
+*.cookies
+.env
+
+# Exported Docker Image Tarballs
+*.tar
+*.tar.gz
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp

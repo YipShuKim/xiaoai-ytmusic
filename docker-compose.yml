@@ -1,0 +1,23 @@
+services:
+  xiaoai-ytmusic:
+    image: xiaoai-ytmusic:latest
+    container_name: xiaoai-ytmusic
+    restart: unless-stopped
+    # 推荐使用 host 网络模式：
+    # 1. 自动探测 NAS 真实局域网 IP 供小爱音箱拉取音频流
+    # 2. 支持 DLNA (UDP 1900) 局域网多播投屏发现
+    network_mode: host
+    environment:
+      - TZ=Asia/Shanghai
+      - PORT=8080
+      # 建议显式填写 NAS 的局域网 IP（例如 192.168.1.100），留空则自动探测
+      - LAN_IP=
+      # 访问 YouTube Music 的 HTTP/HTTPS 代理（若 NAS 已走旁路由/透明网关请留空；否则填如 http://192.168.1.2:7890）
+      - YTMUSIC_PROXY=
+      # 可选：Web 管理后台密码
+      - ADMIN_PASSWORD=
+      # 音频缓存上限 (MB) 与过期时间 (小时)
+      - MAX_CACHE_MB=1024
+      - CACHE_TTL_HOURS=72
+    volumes:
+      - ./data:/app/data

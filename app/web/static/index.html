@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XiaoAi YouTube Music 控制台</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --card-hover: #263449;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #ef4444;
+      --primary-hover: #dc2626;
+      --accent: #3b82f6;
+      --success: #10b981;
+      --warn: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+    .container { max-width: 1180px; margin: 0 auto; padding: 20px; }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 16px 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 18px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-logo {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: linear-gradient(135deg, #ef4444, #f97316);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 18px; color: #fff;
+    }
+    .brand h1 { font-size: 18px; font-weight: 700; }
+    .brand p { font-size: 12px; color: var(--muted); }
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .badge {
+      font-size: 12px; padding: 4px 10px; border-radius: 999px;
+      background: #0f172a; border: 1px solid var(--border); color: var(--muted);
+    }
+    .badge.clickable { cursor: pointer; }
+    .badge.ok { border-color: rgba(16,185,129,0.4); color: #34d399; background: rgba(16,185,129,0.1); }
+    .badge.warn { border-color: rgba(245,158,11,0.4); color: #fbbf24; background: rgba(245,158,11,0.1); }
+    .tabs {
+      display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 9px 16px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--card); color: var(--muted); cursor: pointer;
+      font-size: 14px; font-weight: 600; transition: all 0.15s;
+    }
+    .tab-btn.active {
+      background: var(--primary); color: #fff; border-color: var(--primary);
+    }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 18px; margin-bottom: 18px;
+    }
+    .card h2 {
+      font-size: 16px; font-weight: 700; margin-bottom: 12px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+    input[type="text"], input[type="password"], input[type="number"], select, textarea {
+      background: #0f172a; border: 1px solid var(--border); color: var(--text);
+      padding: 8px 12px; border-radius: 8px; font-size: 14px; outline: none;
+    }
+    input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+    .flex-1 { flex: 1; min-width: 180px; }
+    button {
+      padding: 8px 14px; border-radius: 8px; border: 1px solid transparent;
+      background: var(--accent); color: #fff; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: opacity 0.15s;
+    }
+    button:hover { opacity: 0.9; }
+    button.primary { background: var(--primary); }
+    button.secondary { background: #334155; color: var(--text); }
+    button.success { background: var(--success); }
+    button.sm { padding: 5px 10px; font-size: 12px; }
+    .now-playing {
+      display: flex; gap: 16px; align-items: center; padding: 14px;
+      background: #0f172a; border-radius: 10px; border: 1px solid var(--border);
+      margin-bottom: 14px;
+    }
+    .cover {
+      width: 68px; height: 68px; border-radius: 8px; background: #1e293b;
+      object-fit: cover; flex-shrink: 0;
+    }
+    .np-info { flex: 1; overflow: hidden; }
+    .np-title { font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .np-artist { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .np-meta { font-size: 12px; color: #64748b; margin-top: 4px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td {
+      text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border);
+    }
+    th { color: var(--muted); font-weight: 600; font-size: 12px; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    .hidden { display: none !important; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+    .qr-box {
+      text-align: center; padding: 16px; background: #0f172a;
+      border-radius: 10px; border: 1px dashed var(--border); margin-top: 10px;
+    }
+    .qr-box img { width: 180px; height: 180px; border-radius: 8px; background: #fff; padding: 6px; }
+    .stat-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px; margin-bottom: 14px;
+    }
+    .stat-box {
+      background: #0f172a; border: 1px solid var(--border); border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .stat-box .k { font-size: 11px; color: var(--muted); display: block; }
+    .stat-box .v { font-size: 14px; font-weight: 700; margin-top: 3px; display: block; }
+    .dropzone {
+      border: 2px dashed var(--border); border-radius: 10px; padding: 18px;
+      text-align: center; background: #0f172a; cursor: pointer; margin-bottom: 12px;
+      transition: border-color 0.15s;
+    }
+    .dropzone:hover, .dropzone.dragover { border-color: var(--accent); }
+    .step-list { font-size: 13px; color: var(--muted); padding-left: 18px; margin-bottom: 12px; }
+    .step-list li { margin-bottom: 5px; }
+    .step-list code { color: #93c5fd; background: #0f172a; padding: 2px 5px; border-radius: 4px; }
+    .toast {
+      position: fixed; bottom: 20px; right: 20px; padding: 10px 16px;
+      background: #1e293b; border: 1px solid var(--accent); color: #fff;
+      border-radius: 8px; font-size: 13px; z-index: 999; box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="brand-logo">YT</div>
+        <div>
+          <h1>XiaoAi × YouTube Music 一体化中枢</h1>
+          <p>精简融合 Songloft (MIoT) + ytmusic-bridge + MiAir-Next</p>
+        </div>
+      </div>
+      <div class="badges">
+        <span id="badge-ytm" class="badge clickable" onclick="switchTabById('ytmusic')">YouTube: 检测中</span>
+        <span id="badge-auth" class="badge clickable" onclick="switchTabById('xiaomi')">小米账号: 检测中</span>
+        <span id="badge-voice" class="badge">语音拦截: 检测中</span>
+        <span id="badge-cache" class="badge">缓存: 0 MB</span>
+        <select id="global-device" onchange="onSelectGlobalDevice()" title="当前控制音箱">
+          <option value="">自动选择默认音箱</option>
+        </select>
+      </div>
+    </header>
+
+    <div class="tabs">
+      <button class="tab-btn active" id="tabbtn-player" onclick="switchTab('player', this)">🎵 点歌与播放控制</button>
+      <button class="tab-btn" id="tabbtn-ytmusic" onclick="switchTab('ytmusic', this)">🎬 YouTube Music 登录</button>
+      <button class="tab-btn" id="tabbtn-xiaomi" onclick="switchTab('xiaomi', this)">🔊 小米账号与音箱</button>
+      <button class="tab-btn" id="tabbtn-voice" onclick="switchTab('voice', this)">🎙️ 语音拦截与对话日志</button>
+      <button class="tab-btn" id="tabbtn-settings" onclick="switchTab('settings', this)">⚙️ 代理与系统设置</button>
+    </div>
+
+    <!-- TAB 1: 点歌与播放控制 -->
+    <div id="tab-player">
+      <div class="grid">
+        <div class="card">
+          <h2>
+            <span>正在播放</span>
+            <span id="np-state" class="badge">空闲</span>
+          </h2>
+          <div class="now-playing">
+            <img id="np-cover" class="cover" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='68' height='68'><rect width='100%' height='100%' fill='%231e293b'/><text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' fill='%2364748b' font-size='22'>♪</text></svg>" alt="cover" />
+            <div class="np-info">
+              <div id="np-title" class="np-title">暂未播放歌曲</div>
+              <div id="np-artist" class="np-artist">对着音箱说“小爱同学，播放周杰伦晴天”或在右侧搜歌点播</div>
+              <div id="np-meta" class="np-meta">模式: 列表循环</div>
+            </div>
+          </div>
+          <div class="row">
+            <button class="secondary" onclick="playerCmd('previous')">⏮ 上一首</button>
+            <button class="primary" onclick="playerCmd('play')">▶ 播放/继续</button>
+            <button class="secondary" onclick="playerCmd('pause')">⏸ 暂停</button>
+            <button class="secondary" onclick="playerCmd('stop')">⏹ 停止</button>
+            <button class="secondary" onclick="playerCmd('next')">⏭ 下一首</button>
+            <select id="np-mode" onchange="playerCmd('mode', this.value)">
+              <option value="loop">🔁 列表循环</option>
+              <option value="single">🔂 单曲循环</option>
+              <option value="random">🔀 随机播放</option>
+              <option value="order">➡ 顺序播放</option>
+            </select>
+          </div>
+          <div class="row" style="margin-top:12px;">
+            <span style="font-size:13px;color:var(--muted);">音量:</span>
+            <input type="range" id="np-vol" min="0" max="100" value="40" style="flex:1;" onchange="playerCmd('volume', this.value)" />
+            <input type="text" id="tts-input" placeholder="输入文字让小爱播报 (TTS)..." style="width:200px;" />
+            <button class="secondary sm" onclick="sendTTS()">播报</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>⚡ 一键搜索并推送到小爱音箱</h2>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">
+            直接检索 YouTube Music 曲库，自动建立播放队列并推送音频流给小爱音箱：
+          </p>
+          <div class="row">
+            <input type="text" id="quick-play-input" class="flex-1" placeholder="例如：周杰伦 晴天 / Taylor Swift Love Story" onkeydown="if(event.key==='Enter')quickSearchAndPlay()" />
+            <button class="primary" onclick="quickSearchAndPlay()">🚀 立即在音箱播放</button>
+            <button class="secondary" onclick="searchYTMusicOnly()">🔍 仅搜索列表</button>
+          </div>
+          <div style="margin-top:14px;">
+            <h2 style="font-size:14px;">
+              <span>当前播放队列 (<span id="queue-count">0</span> 首)</span>
+              <button class="secondary sm" onclick="saveCurrentQueueAsPlaylist()">💾 保存当前队列为歌单</button>
+            </h2>
+            <div style="max-height:210px;overflow-y:auto;">
+              <table>
+                <thead><tr><th>#</th><th>歌曲</th><th>时长</th><th>操作</th></tr></thead>
+                <tbody id="queue-tbody">
+                  <tr><td colspan="4" style="color:var(--muted);text-align:center;">队列为空</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>
+          <span>📚 已保存的播放列表 / YouTube Music 同步歌单 (<span id="playlists-count">0</span>)</span>
+          <div class="row" style="margin:0;">
+            <input type="text" id="import-pl-input" placeholder="粘贴歌单链接或 ID (如 LM 或 PLxxx)..." style="width:240px;font-size:12px;padding:5px 10px;" />
+            <button class="secondary sm" onclick="importPlaylistByUrl()">➕ 导入歌单</button>
+            <button class="primary sm" onclick="syncYTMPlaylists()">🔄 同步账号歌单</button>
+          </div>
+        </h2>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">
+          登录 YouTube Music 后会自动拉取并保存你的「我喜欢的音乐」及收藏歌单。你也可以直接对音箱说：<strong>“小爱同学，播放歌单 [歌单名]”</strong> 或 <strong>“小爱同学，播放我喜欢的音乐”</strong>。
+        </p>
+        <div style="max-height:220px;overflow-y:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>歌单名称</th>
+                <th>曲目数</th>
+                <th>来源</th>
+                <th>更新时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="playlists-tbody">
+              <tr><td colspan="5" style="color:var(--muted);text-align:center;">暂无已保存歌单（登录 YouTube Music 后将自动同步，也可点击右上角“同步账号歌单”）</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 id="search-card-title">YouTube Music 搜索 / 歌单曲目列表</h2>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>标题</th>
+                <th>歌手</th>
+                <th>专辑</th>
+                <th>时长</th>
+                <th>匹配度</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="search-tbody">
+              <tr><td colspan="7" style="color:var(--muted);text-align:center;">在上方输入歌名搜索 YouTube Music</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: YouTube Music 登录与认证 (新增独立登录页) -->
+    <div id="tab-ytmusic" class="hidden">
+      <div class="card">
+        <h2>
+          <span>🎬 YouTube Music 账号认证状态</span>
+          <div class="row" style="margin:0;">
+            <button class="primary sm" onclick="runYTDiagnose()">⚡ 一键诊断搜索与播放下载</button>
+            <button class="secondary sm" onclick="loadYTMAuthStatus()">🔄 刷新状态</button>
+            <button class="secondary sm" onclick="logoutYTMusic()">退出登录</button>
+          </div>
+        </h2>
+        <div class="stat-grid">
+          <div class="stat-box">
+            <span class="k">当前登录态</span>
+            <span class="v" id="ytm-st-login">检测中...</span>
+          </div>
+          <div class="stat-box">
+            <span class="k">SAPISIDHASH 签名</span>
+            <span class="v" id="ytm-st-sapisid">-</span>
+          </div>
+          <div class="stat-box">
+            <span class="k">有效 Cookie / 认证项</span>
+            <span class="v" id="ytm-st-count">0 / 0</span>
+          </div>
+          <div class="stat-box">
+            <span class="k">质量评分</span>
+            <span class="v" id="ytm-st-score">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="k">QuickJS 签名引擎</span>
+            <span class="v" id="ytm-st-qjs">-</span>
+          </div>
+          <div class="stat-box">
+            <span class="k">当前代理配置</span>
+            <span class="v" id="ytm-st-proxy">-</span>
+          </div>
+        </div>
+        <div id="ytm-diag-box" class="hidden" style="background:#0f172a;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px;margin-top:8px;"></div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <h2>🚀 方式一：免插件极速登录（推荐，15 秒完成）</h2>
+          <ol class="step-list">
+            <li>点击下方按钮在新窗口打开 <code>music.youtube.com</code> 并登录你的 Google 账号：</li>
+            <li>在打开的 YouTube Music 页面按键盘 <code>F12</code> 打开开发者工具，切换到 <strong>Network (网络)</strong> 标签页。</li>
+            <li>刷新一下页面，在请求列表任意一行上点击<strong>鼠标右键 ➔ Copy ➔ Copy as cURL (bash)</strong>（或 <code>Copy as cURL (cmd)</code> / <code>Copy as fetch</code>）。</li>
+            <li>直接粘贴到右侧输入框并点击 <strong>「🔐 一键解析并登录」</strong>，系统会自动提取全部 <code>HttpOnly</code> 登录凭证（<code>SID</code>、<code>SAPISID</code>、<code>LOGIN_INFO</code> 等）并启用快照防擦除保护！</li>
+          </ol>
+          <div class="row">
+            <button class="primary" onclick="window.open('https://music.youtube.com', '_blank')">🔗 1. 打开 YouTube Music 网页版登录</button>
+          </div>
+
+          <hr style="border:none;border-top:1px solid var(--border);margin:16px 0;" />
+
+          <h2>📂 方式二：拖拽上传 cookies.txt / JSON 文件</h2>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">
+            支持浏览器扩展 <code>Get cookies.txt LOCALLY</code> 导出的 <code>.txt</code> 文件，或 <code>Cookie-Editor</code> 导出的 <code>.json</code> 文件：
+          </p>
+          <div id="cookie-dropzone" class="dropzone" onclick="document.getElementById('cookie-file-input').click()"
+               ondragover="event.preventDefault();this.classList.add('dragover')"
+               ondragleave="this.classList.remove('dragover')"
+               ondrop="onDropCookieFile(event)">
+            <p style="font-weight:700;font-size:14px;">📥 点击选择或将 cookies.txt / .json 文件拖拽到此处</p>
+            <p style="font-size:12px;color:var(--muted);margin-top:4px;">上传后将自动校验登录态并锁定保护，防止 yt-dlp 覆写失效</p>
+            <input type="file" id="cookie-file-input" accept=".txt,.json,.cookies,text/plain,application/json" class="hidden" onchange="onSelectCookieFile(this)" />
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>📋 粘贴登录凭证（支持 cURL / Netscape / JSON / Cookie 字符串）</h2>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:8px;">
+            无论是 <code>Copy as cURL</code> 命令、<code># Netscape HTTP Cookie File</code>、JSON 数组，还是 <code>SID=xxx; SAPISID=yyy</code>，均可直接粘贴在下框中自动识别转换：
+          </p>
+          <textarea id="cookies-textarea" rows="11" style="width:100%;font-family:monospace;font-size:12px;" placeholder="在此粘贴：&#10;1. 浏览器 F12 -> Copy as cURL (bash/cmd) 的完整内容&#10;2. 或 Get cookies.txt LOCALLY 导出的 Netscape 文本&#10;3. 或 Cookie-Editor 导出的 JSON 数组"></textarea>
+          <div class="row" style="margin-top:12px;">
+            <button class="primary" onclick="saveCookies()">🔐 一键解析并登录 YouTube Music</button>
+            <button class="secondary" onclick="runYTDiagnose()">🧪 测试搜索与播放下载</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: 小米账号与音箱 -->
+    <div id="tab-xiaomi" class="hidden">
+      <div class="grid">
+        <div class="card">
+          <h2>📱 方式一：米家 App 扫码登录（推荐，免验证码）</h2>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">
+            打开手机「米家 App」扫描下方二维码，即可自动换取并持久化小爱音箱控制凭证。
+          </p>
+          <button class="primary" onclick="startQRLogin()">获取登录二维码</button>
+          <div id="qr-container" class="qr-box hidden">
+            <img id="qr-img" src="" alt="QR Code" />
+            <p id="qr-status" style="font-size:13px;color:var(--muted);margin-top:8px;">等待扫码...</p>
+          </div>
+
+          <hr style="border:none;border-top:1px solid var(--border);margin:18px 0;" />
+
+          <h2>🔑 方式二：账号密码 / Cookie 登录</h2>
+          <div class="form-group">
+            <label>小米账号（手机号/邮箱/小米ID）</label>
+            <input type="text" id="mi-acc" style="width:100%;" placeholder="小米账号" />
+          </div>
+          <div class="form-group">
+            <label>登录密码</label>
+            <input type="password" id="mi-pwd" style="width:100%;" placeholder="密码" />
+          </div>
+          <div id="captcha-box" class="form-group hidden">
+            <label>图形验证码</label>
+            <div class="row">
+              <img id="captcha-img" src="" style="height:38px;border-radius:4px;" />
+              <input type="text" id="mi-captcha" placeholder="输入验证码" />
+            </div>
+          </div>
+          <button onclick="loginPassword()">密码登录</button>
+
+          <div class="form-group" style="margin-top:14px;">
+            <label>或粘贴 Cookie (包含 userId=...; passToken=...)</label>
+            <div class="row">
+              <input type="text" id="mi-cookie" class="flex-1" placeholder="userId=123456; passToken=xxx" />
+              <button class="secondary" onclick="loginCookie()">导入 Cookie</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>
+            <span>🔊 小爱音箱设备列表</span>
+            <button class="secondary sm" onclick="loadDevices(true)">🔄 刷新设备</button>
+          </h2>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">
+            勾选需要开启「YouTube Music 语音点歌拦截」的音箱设备：
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>启用监听</th>
+                <th>音箱名称</th>
+                <th>硬件型号</th>
+                <th>状态</th>
+                <th>设为默认</th>
+              </tr>
+            </thead>
+            <tbody id="devices-tbody">
+              <tr><td colspan="5" style="color:var(--muted);text-align:center;">请先登录小米账号</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: 语音拦截与对话日志 -->
+    <div id="tab-voice" class="hidden">
+      <div class="card">
+        <h2>🧪 语音口令仿真测试</h2>
+        <div class="row">
+          <input type="text" id="voice-test-input" class="flex-1" placeholder="例如：播放周杰伦的晴天 / 我今天想听七里香 / 下一首 / 单曲循环" value="播放周杰伦的晴天" />
+          <button onclick="testVoiceCommand(false)">仅测试规则匹配</button>
+          <button class="primary" onclick="testVoiceCommand(true)">测试并在音箱执行</button>
+        </div>
+        <div id="voice-test-result" style="font-size:13px;color:var(--muted);margin-top:8px;"></div>
+      </div>
+
+      <div class="card">
+        <h2>
+          <span>📜 小爱实时语音对话与拦截记录</span>
+          <button class="secondary sm" onclick="loadVoiceLogs()">🔄 刷新日志</button>
+        </h2>
+        <table>
+          <thead>
+            <tr>
+              <th>时间</th>
+              <th>音箱</th>
+              <th>用户语音指令</th>
+              <th>拦截状态</th>
+              <th>命中动作 / 播放曲目</th>
+            </tr>
+          </thead>
+          <tbody id="voice-logs-tbody">
+            <tr><td colspan="5" style="color:var(--muted);text-align:center;">暂无语音记录</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 5: 系统设置 -->
+    <div id="tab-settings" class="hidden">
+      <div class="grid">
+        <div class="card">
+          <h2>🌐 网络、代理与播放参数</h2>
+          <div class="form-group">
+            <label>NAS 局域网 IP（小爱音箱通过此 IP 拉取音频流，切勿填 127.0.0.1）</label>
+            <input type="text" id="cfg-lan-ip" style="width:100%;" placeholder="例如 192.168.1.100" />
+          </div>
+          <div class="form-group">
+            <label>YouTube 访问代理 (HTTP / HTTPS Proxy；若 NAS 已走旁路由/透明网关请留空！)</label>
+            <input type="text" id="cfg-proxy" style="width:100%;" placeholder="若 NAS 有透明网关请留空；否则填如 http://192.168.1.2:7890" />
+          </div>
+          <div class="form-group">
+            <label>对话轮询间隔（秒，建议 1.5 ~ 3.0）</label>
+            <input type="number" step="0.5" id="cfg-poll" style="width:100%;" value="2.0" />
+          </div>
+          <div class="form-group">
+            <label>最大磁盘音频缓存容量（MB）</label>
+            <input type="number" id="cfg-cache-mb" style="width:100%;" value="1024" />
+          </div>
+          <div class="row" style="margin:12px 0;">
+            <label><input type="checkbox" id="cfg-voice-enabled" checked /> 启用小爱语音拦截点歌</label>
+            <label><input type="checkbox" id="cfg-prefetch" checked /> 后台自动预缓存下一首</label>
+            <label><input type="checkbox" id="cfg-lyrics" checked /> 触屏音箱歌词封面匹配</label>
+            <label><input type="checkbox" id="cfg-dlna" checked /> 启用 DLNA 局域网投屏接收器</label>
+          </div>
+          <div class="row">
+            <button class="primary" onclick="saveSettings()">💾 保存配置</button>
+            <button class="secondary" onclick="clearAudioCache()">🗑️ 清空已下载音频缓存</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>💡 常见问题排查说明</h2>
+          <ul class="step-list" style="line-height:1.8;">
+            <li><strong>提示 <code>Sign in to confirm you're not a bot</code>：</strong>说明你使用的代理节点 IP 被 YouTube 要求登录验证。请点击顶部 <strong>「🎬 YouTube Music 登录」</strong> 标签页导入你的 YouTube 登录态，即可彻底绕过机器验证。</li>
+            <li><strong>搜索超时或连接重置：</strong>若你的 NAS 本身已经通过旁路由/主路由具备科学上网能力，请将左侧「YouTube 访问代理」<strong>留空并保存</strong>（填错代理 IP 会导致连接超时）。系统也已内置代理失效自动回退直连机制。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script>
+    let currentDeviceId = '';
+    let qrPollTimer = null;
+    let lastSearchResults = [];
+
+    function showToast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      setTimeout(() => el.classList.add('hidden'), 3600);
+    }
+
+    async function api(path, options = {}) {
+      const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers || {});
+      const resp = await fetch(path, Object.assign({}, options, { headers }));
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        throw new Error(data.error || data.message || ('HTTP ' + resp.status));
+      }
+      return data;
+    }
+
+    function switchTabById(name) {
+      const btn = document.getElementById('tabbtn-' + name);
+      switchTab(name, btn);
+    }
+
+    function switchTab(name, btn) {
+      ['player', 'ytmusic', 'xiaomi', 'voice', 'settings'].forEach(t => {
+        document.getElementById('tab-' + t).classList.toggle('hidden', t !== name);
+      });
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      if (name === 'ytmusic') loadYTMAuthStatus();
+      if (name === 'xiaomi') loadDevices(false);
+      if (name === 'voice') loadVoiceLogs();
+      if (name === 'settings') loadConfig();
+    }
+
+    function onSelectGlobalDevice() {
+      currentDeviceId = document.getElementById('global-device').value;
+      refreshStatus();
+    }
+
+    async function refreshStatus() {
+      try {
+        const data = await api('/api/player/status');
+        const ytm = data.ytmusic_auth || {};
+        const ytmBadge = document.getElementById('badge-ytm');
+        if (ytm.logged_in) {
+          ytmBadge.textContent = `YouTube: 已登录 (${ytm.auth_cookie_count}项凭证)`;
+          ytmBadge.className = 'badge clickable ok';
+        } else {
+          ytmBadge.textContent = 'YouTube: 未登录 (点击登录防风控)';
+          ytmBadge.className = 'badge clickable warn';
+        }
+
+        const authBadge = document.getElementById('badge-auth');
+        authBadge.textContent = data.xiaomi_authenticated ? `小米账号: 已连接 (${data.user_id})` : '小米账号: 未登录';
+        authBadge.className = 'badge clickable ' + (data.xiaomi_authenticated ? 'ok' : 'warn');
+
+        const voiceRunning = data.voice_monitor && data.voice_monitor.running;
+        const voiceBadge = document.getElementById('badge-voice');
+        voiceBadge.textContent = voiceRunning ? '语音拦截: 运行中' : '语音拦截: 未激活';
+        voiceBadge.className = 'badge ' + (voiceRunning ? 'ok' : 'warn');
+
+        if (data.cache) {
+          document.getElementById('badge-cache').textContent = `缓存: ${data.cache.total_mb} MB (${data.cache.count}首)`;
+        }
+
+        const players = data.players || [];
+        let activePlayer = players.find(p => p.device_id === currentDeviceId) || players[0];
+        if (activePlayer) {
+          document.getElementById('np-state').textContent = activePlayer.state.toUpperCase();
+          const t = activePlayer.current_track;
+          document.getElementById('np-title').textContent = t ? t.title : '暂未播放歌曲';
+          document.getElementById('np-artist').textContent = t ? (t.artists || []).join(', ') : (activePlayer.last_error || '就绪');
+          document.getElementById('np-meta').textContent = `设备: ${activePlayer.device_name} | 模式: ${activePlayer.play_mode} | 进度: ${activePlayer.position}s / ${activePlayer.duration}s` + (activePlayer.last_error ? ` | ⚠️ ${activePlayer.last_error}` : '');
+          if (t && t.thumbnail) {
+            document.getElementById('np-cover').src = t.thumbnail;
+          }
+          document.getElementById('np-mode').value = activePlayer.play_mode || 'loop';
+          renderQueue(activePlayer.queue || [], activePlayer.current_index);
+        }
+      } catch (e) {
+        console.warn('refreshStatus error:', e);
+      }
+    }
+
+    function renderQueue(queue, currentIndex) {
+      document.getElementById('queue-count').textContent = queue.length;
+      const tbody = document.getElementById('queue-tbody');
+      if (!queue.length) {
+        tbody.innerHTML = '<tr><td colspan="4" style="color:var(--muted);text-align:center;">队列为空</td></tr>';
+        return;
+      }
+      tbody.innerHTML = queue.map((t, idx) => `
+        <tr style="${idx === currentIndex ? 'color:#34d399;font-weight:700;' : ''}">
+          <td>${idx + 1}</td>
+          <td>${escapeHtml(t.display_name || t.title)}</td>
+          <td>${escapeHtml(t.duration || '-')}</td>
+          <td><button class="sm secondary" onclick="playerCmd('play_index', ${idx})">播放</button></td>
+        </tr>
+      `).join('');
+    }
+
+    async function playerCmd(action, value = null) {
+      try {
+        await api('/api/player/control', {
+          method: 'POST',
+          body: JSON.stringify({ device_id: currentDeviceId, action, value })
+        });
+        showToast('指令已下发: ' + action);
+        setTimeout(refreshStatus, 400);
+      } catch (e) {
+        showToast('操作失败: ' + e.message);
+      }
+    }
+
+    async function sendTTS() {
+      const text = document.getElementById('tts-input').value.trim();
+      if (!text) return;
+      await playerCmd('tts', text);
+      document.getElementById('tts-input').value = '';
+    }
+
+    async function quickSearchAndPlay() {
+      const q = document.getElementById('quick-play-input').value.trim();
+      if (!q) return showToast('请输入要播放的歌名或歌手');
+      showToast('正在从 YouTube Music 搜索并推送到音箱...');
+      try {
+        const res = await api('/api/player/search-and-play', {
+          method: 'POST',
+          body: JSON.stringify({ device_id: currentDeviceId, query: q })
+        });
+        if (res.track) {
+          showToast('开始播放: ' + res.track.display_name);
+        } else {
+          showToast('播放未成功: ' + (res.error || '未找到可播放曲目'));
+        }
+        refreshStatus();
+      } catch (e) {
+        showToast('点播失败: ' + e.message);
+      }
+    }
+
+    async function searchYTMusicOnly() {
+      const q = document.getElementById('quick-play-input').value.trim();
+      if (!q) return showToast('请输入搜索关键词');
+      document.getElementById('search-card-title').textContent = `YouTube Music 搜索结果：「${q}」`;
+      const tbody = document.getElementById('search-tbody');
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);">正在搜索 YouTube Music...</td></tr>';
+      try {
+        const res = await api('/api/ytmusic/search', {
+          method: 'POST',
+          body: JSON.stringify({ query: q, limit: 15 })
+        });
+        lastSearchResults = res.results || [];
+        renderTrackTable(lastSearchResults);
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="7" style="color:#ef4444;text-align:center;">搜索失败: ${escapeHtml(e.message)}</td></tr>`;
+      }
+    }
+
+    function renderTrackTable(tracks) {
+      const tbody = document.getElementById('search-tbody');
+      if (!tracks || !tracks.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);">无曲目</td></tr>';
+        return;
+      }
+      tbody.innerHTML = tracks.map((t, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td><strong>${escapeHtml(t.title)}</strong></td>
+          <td>${escapeHtml((t.artists || []).join(', '))}</td>
+          <td>${escapeHtml(t.album || '-')}</td>
+          <td>${escapeHtml(t.duration || '-')}</td>
+          <td>${t.match_score ? Math.round(t.match_score * 100) + '%' : '-'}</td>
+          <td>
+            <button class="sm primary" onclick="playSearchedTrack(${i}, false)">▶ 立即播放</button>
+            <button class="sm secondary" onclick="playSearchedTrack(${i}, true)">+ 队列</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // ---- Playlists Management ----
+
+    async function loadPlaylists() {
+      try {
+        const res = await api('/api/playlists');
+        const list = res.playlists || [];
+        document.getElementById('playlists-count').textContent = list.length + (res.syncing ? ' · 同步中...' : '');
+        const tbody = document.getElementById('playlists-tbody');
+        if (!list.length) {
+          tbody.innerHTML = `<tr><td colspan="5" style="color:var(--muted);text-align:center;">${res.syncing ? '⏳ 正在后台同步你的 YouTube Music 播放列表...' : '暂无已保存歌单（登录 YouTube Music 后自动同步，或点击右上角“同步账号歌单”）'}</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = list.map(pl => `
+          <tr>
+            <td><strong>${escapeHtml(pl.title)}</strong> <span style="font-size:11px;color:var(--muted);">(${escapeHtml(pl.playlist_id)})</span></td>
+            <td>${pl.track_count} 首</td>
+            <td><span class="badge ${pl.source === 'ytmusic' ? 'ok' : ''}">${pl.source === 'ytmusic' ? 'YouTube 同步' : '本地保存'}</span></td>
+            <td>${pl.updated_at ? new Date(pl.updated_at * 1000).toLocaleString() : '-'}</td>
+            <td>
+              <button class="sm primary" onclick="playSavedPlaylist('${escapeHtml(pl.playlist_id)}', '${escapeHtml(pl.title)}')">▶ 整单播放</button>
+              <button class="sm secondary" onclick="viewSavedPlaylist('${escapeHtml(pl.playlist_id)}')">📄 查看曲目</button>
+              <button class="sm secondary" onclick="deleteSavedPlaylist('${escapeHtml(pl.playlist_id)}')">🗑️</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        console.warn('loadPlaylists error:', e);
+      }
+    }
+
+    async function syncYTMPlaylists() {
+      showToast('正在从 YouTube Music 同步你的播放列表...');
+      try {
+        const res = await api('/api/playlists/sync', { method: 'POST' });
+        if (res.status === 'ok') {
+          showToast(`成功同步 ${res.synced_playlists} 个歌单（共 ${res.total_tracks} 首歌曲）！`);
+        } else {
+          showToast(res.message || res.error || '同步完成');
+        }
+        loadPlaylists();
+      } catch (e) {
+        showToast('同步歌单失败: ' + e.message);
+      }
+    }
+
+    async function importPlaylistByUrl() {
+      const val = document.getElementById('import-pl-input').value.trim();
+      if (!val) return showToast('请输入播放列表链接或 Playlist ID (如 LM)');
+      showToast('正在拉取并导入歌单...');
+      try {
+        const res = await api('/api/playlists/import', {
+          method: 'POST',
+          body: JSON.stringify({ url_or_id: val })
+        });
+        document.getElementById('import-pl-input').value = '';
+        showToast(`已导入歌单：${res.playlist.title} (${res.playlist.track_count} 首)`);
+        loadPlaylists();
+      } catch (e) {
+        showToast('导入失败: ' + e.message);
+      }
+    }
+
+    async function saveCurrentQueueAsPlaylist() {
+      const title = prompt('请输入要保存的歌单名称：', document.getElementById('quick-play-input').value.trim() || '我的精选歌单');
+      if (!title) return;
+      try {
+        const res = await api('/api/playlists/save-queue', {
+          method: 'POST',
+          body: JSON.stringify({ device_id: currentDeviceId, title })
+        });
+        showToast(`已保存歌单：${res.playlist.title} (${res.playlist.track_count} 首)`);
+        loadPlaylists();
+      } catch (e) {
+        showToast('保存失败: ' + e.message);
+      }
+    }
+
+    async function playSavedPlaylist(playlistId, title) {
+      showToast(`正在加载歌单《${title}》并推送到小爱音箱...`);
+      try {
+        const res = await api('/api/playlists/play', {
+          method: 'POST',
+          body: JSON.stringify({ device_id: currentDeviceId, playlist_id: playlistId, start_index: 0 })
+        });
+        if (res.status === 'ok' && res.track) {
+          showToast(`开始播放歌单《${title}》: ${res.track.display_name}`);
+        } else {
+          showToast('播放未成功: ' + (res.error || '未知错误'));
+        }
+        refreshStatus();
+      } catch (e) {
+        showToast('播放歌单失败: ' + e.message);
+      }
+    }
+
+    async function viewSavedPlaylist(playlistId) {
+      try {
+        const pl = await api('/api/playlists/' + encodeURIComponent(playlistId));
+        lastSearchResults = pl.tracks || [];
+        document.getElementById('search-card-title').textContent = `歌单曲目：《${pl.title}》(${lastSearchResults.length} 首)`;
+        renderTrackTable(lastSearchResults);
+      } catch (e) {
+        showToast('读取歌单失败: ' + e.message);
+      }
+    }
+
+    async function deleteSavedPlaylist(playlistId) {
+      try {
+        await api('/api/playlists/' + encodeURIComponent(playlistId), { method: 'DELETE' });
+        showToast('已删除歌单');
+        loadPlaylists();
+      } catch (e) {
+        showToast('删除失败: ' + e.message);
+      }
+    }
+
+    async function playSearchedTrack(idx, append) {
+      const track = lastSearchResults[idx];
+      if (!track) return;
+      showToast((append ? '正在加入队列: ' : '正在推送播放: ') + track.display_name);
+      try {
+        const res = await api('/api/player/play-track', {
+          method: 'POST',
+          body: JSON.stringify({ device_id: currentDeviceId, track, append })
+        });
+        if (res.status !== 'ok') {
+          showToast('播放失败: ' + (res.error || '未知错误'));
+        } else {
+          showToast('已在音箱开始播放: ' + track.display_name);
+        }
+        refreshStatus();
+      } catch (e) {
+        showToast('播放失败: ' + e.message);
+      }
+    }
+
+    // ---- YouTube Music Login & Diagnostics ----
+
+    async function loadYTMAuthStatus() {
+      try {
+        const st = await api('/api/ytmusic/auth-status');
+        const loginEl = document.getElementById('ytm-st-login');
+        loginEl.textContent = st.logged_in ? '✅ 已登录 (受保护)' : (st.present ? '⚠️ 仅访客 Cookie' : '⚪ 未登录 (匿名)');
+        loginEl.style.color = st.logged_in ? '#34d399' : '#fbbf24';
+
+        document.getElementById('ytm-st-sapisid').textContent = st.has_sapisid ? '✅ 已启用' : '⚪ 未启用';
+        document.getElementById('ytm-st-count').textContent = `${st.cookie_count || 0} 条 / ${st.auth_cookie_count || 0} 项核心凭证`;
+        document.getElementById('ytm-st-score').textContent = `${st.score || 0} 分`;
+        document.getElementById('ytm-st-qjs').textContent = st.has_quickjs ? '✅ QuickJS 就绪' : '⚠️ 未安装';
+        document.getElementById('ytm-st-proxy').textContent = st.proxy || '直连 / 透明网关';
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
+    function onDropCookieFile(ev) {
+      ev.preventDefault();
+      document.getElementById('cookie-dropzone').classList.remove('dragover');
+      const file = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0];
+      if (file) readCookieFile(file);
+    }
+
+    function onSelectCookieFile(input) {
+      const file = input.files && input.files[0];
+      if (file) readCookieFile(file);
+      input.value = '';
+    }
+
+    function readCookieFile(file) {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        document.getElementById('cookies-textarea').value = String(reader.result || '');
+        await saveCookies();
+      };
+      reader.readAsText(file);
+    }
+
+    async function saveCookies() {
+      const text = document.getElementById('cookies-textarea').value.trim();
+      if (!text) return showToast('请先粘贴 Cookie / cURL 内容或拖拽文件上传');
+      try {
+        const res = await api('/api/ytmusic/login', {
+          method: 'POST',
+          body: JSON.stringify({ cookies_text: text })
+        });
+        showToast(res.message || 'YouTube 登录态已保存');
+        document.getElementById('cookies-textarea').value = '';
+        loadYTMAuthStatus();
+        refreshStatus();
+        setTimeout(loadPlaylists, 2500);
+        setTimeout(loadPlaylists, 7000);
+      } catch (e) {
+        showToast('登录失败: ' + e.message);
+      }
+    }
+
+    async function logoutYTMusic() {
+      try {
+        const res = await api('/api/ytmusic/logout', { method: 'POST' });
+        showToast(res.message || '已退出登录');
+        loadYTMAuthStatus();
+        refreshStatus();
+      } catch (e) {
+        showToast('操作失败: ' + e.message);
+      }
+    }
+
+    async function runYTDiagnose() {
+      const box = document.getElementById('ytm-diag-box');
+      box.classList.remove('hidden');
+      box.innerHTML = '⏳ 正在测试 YouTube Music 搜索与音频流下载（约需 3~8 秒）...';
+      try {
+        const r = await api('/api/ytmusic/diagnose', {
+          method: 'POST',
+          body: JSON.stringify({ query: '周杰伦 晴天', test_download: true })
+        });
+        const lines = [];
+        lines.push(`<strong>1. 账号登录态：</strong> ${r.cookie_status && r.cookie_status.logged_in ? '✅ 已登录 (' + (r.cookie_status.auth_cookie_names || []).join(', ') + ')' : '⚠️ 未登录匿名模式'}`);
+        lines.push(`<strong>2. 搜索连通性：</strong> ${r.search_ok ? `✅ 成功 (${r.search_ms}ms，返回 ${r.search_count} 首，首曲: ${escapeHtml(r.first_track.display_name)})` : `❌ 失败 (${escapeHtml(r.search_error)})`}`);
+        lines.push(`<strong>3. 音频流提取：</strong> ${r.download_ok ? `✅ 成功 (${r.download_ms}ms，文件大小 ${(r.file_size / 1024 / 1024).toFixed(2)} MB，直链: <code>${escapeHtml(r.stream_url)}</code>)` : `❌ 失败 (${escapeHtml(r.download_error)})`}`);
+        box.innerHTML = lines.join('<br/>');
+        refreshStatus();
+      } catch (e) {
+        box.innerHTML = `❌ 诊断请求异常: ${escapeHtml(e.message)}`;
+      }
+    }
+
+    // ---- Xiaomi Login & Devices ----
+
+    async function startQRLogin() {
+      if (qrPollTimer) clearInterval(qrPollTimer);
+      try {
+        const res = await api('/api/xiaomi/qr/start', { method: 'POST' });
+        const box = document.getElementById('qr-container');
+        box.classList.remove('hidden');
+        document.getElementById('qr-img').src = res.qrcode_url;
+        document.getElementById('qr-status').textContent = '请使用手机「米家 App」扫码确认...';
+        const sid = res.session_id;
+        qrPollTimer = setInterval(async () => {
+          try {
+            const p = await api('/api/xiaomi/qr/poll?session_id=' + encodeURIComponent(sid));
+            document.getElementById('qr-status').textContent = p.message || p.state;
+            if (p.state === 'confirmed') {
+              clearInterval(qrPollTimer);
+              showToast('扫码登录成功！');
+              loadDevices(true);
+              refreshStatus();
+            } else if (p.state === 'expired' || p.state === 'failed') {
+              clearInterval(qrPollTimer);
+            }
+          } catch (e) {
+            clearInterval(qrPollTimer);
+          }
+        }, 2200);
+      } catch (e) {
+        showToast('获取二维码失败: ' + e.message);
+      }
+    }
+
+    async function loginPassword() {
+      const account = document.getElementById('mi-acc').value.trim();
+      const password = document.getElementById('mi-pwd').value;
+      const captcha = document.getElementById('mi-captcha').value.trim();
+      try {
+        const res = await api('/api/xiaomi/login/password', {
+          method: 'POST',
+          body: JSON.stringify({ account, password, captcha })
+        });
+        if (res.state === 'success') {
+          showToast('小米账号登录成功！');
+          document.getElementById('captcha-box').classList.add('hidden');
+          loadDevices(true);
+          refreshStatus();
+        } else if (res.state === 'need_captcha') {
+          document.getElementById('captcha-box').classList.remove('hidden');
+          if (res.captcha_image) document.getElementById('captcha-img').src = res.captcha_image;
+          showToast(res.error || '请输入图形验证码');
+        } else {
+          showToast(res.error || '登录失败');
+        }
+      } catch (e) {
+        showToast('登录失败: ' + e.message);
+      }
+    }
+
+    async function loginCookie() {
+      const cookie = document.getElementById('mi-cookie').value.trim();
+      if (!cookie) return showToast('请粘贴 Cookie');
+      try {
+        const res = await api('/api/xiaomi/login/cookie', {
+          method: 'POST',
+          body: JSON.stringify({ cookie })
+        });
+        if (res.state === 'success') {
+          showToast('Cookie 导入成功！');
+          loadDevices(true);
+          refreshStatus();
+        } else {
+          showToast(res.error || 'Cookie 无效');
+        }
+      } catch (e) {
+        showToast('导入失败: ' + e.message);
+      }
+    }
+
+    async function loadDevices(force = false) {
+      try {
+        const res = await api('/api/xiaomi/devices' + (force ? '?refresh=1' : ''));
+        const devices = res.devices || [];
+        const sel = document.getElementById('global-device');
+        sel.innerHTML = '<option value="">默认音箱</option>' + devices.map(d =>
+          `<option value="${escapeHtml(d.deviceID)}" ${d.deviceID === res.default_device_id ? 'selected' : ''}>${escapeHtml(d.name)} (${escapeHtml(d.hardware)})</option>`
+        ).join('');
+
+        const tbody = document.getElementById('devices-tbody');
+        if (!devices.length) {
+          tbody.innerHTML = '<tr><td colspan="5" style="color:var(--muted);text-align:center;">未发现小爱音箱设备（请确认已登录正确的米家账号）</td></tr>';
+          return;
+        }
+        tbody.innerHTML = devices.map(d => `
+          <tr>
+            <td><input type="checkbox" class="dev-chk" value="${escapeHtml(d.deviceID)}" ${d.enabled ? 'checked' : ''} onchange="saveDeviceSelection('${escapeHtml(res.default_device_id || '')}')" /></td>
+            <td><strong>${escapeHtml(d.name)}</strong><br/><span style="font-size:11px;color:var(--muted);">${escapeHtml(d.deviceID)}</span></td>
+            <td><code>${escapeHtml(d.hardware)}</code> (${escapeHtml(d.model)})</td>
+            <td><span class="badge ok">${escapeHtml(d.presence || 'online')}</span></td>
+            <td>
+              <button class="sm ${d.deviceID === res.default_device_id ? 'success' : 'secondary'}" onclick="saveDeviceSelection('${escapeHtml(d.deviceID)}')">
+                ${d.deviceID === res.default_device_id ? '★ 默认设备' : '设为默认'}
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
+    async function saveDeviceSelection(defaultId) {
+      const enabled = Array.from(document.querySelectorAll('.dev-chk:checked')).map(el => el.value);
+      try {
+        await api('/api/xiaomi/devices/select', {
+          method: 'POST',
+          body: JSON.stringify({ enabled_device_ids: enabled, default_device_id: defaultId })
+        });
+        showToast('音箱监听配置已更新');
+        loadDevices(false);
+        refreshStatus();
+      } catch (e) {
+        showToast('保存设备失败: ' + e.message);
+      }
+    }
+
+    // ---- Voice Logs & Test ----
+
+    async function loadVoiceLogs() {
+      try {
+        const res = await api('/api/voice/logs');
+        const logs = res.logs || [];
+        const tbody = document.getElementById('voice-logs-tbody');
+        if (!logs.length) {
+          tbody.innerHTML = '<tr><td colspan="5" style="color:var(--muted);text-align:center;">暂无对话记录（对着音箱喊“小爱同学，播放...”即可在此看到实时拦截记录）</td></tr>';
+          return;
+        }
+        tbody.innerHTML = logs.map(item => `
+          <tr>
+            <td>${new Date(item.timestamp_ms).toLocaleTimeString()}</td>
+            <td>${escapeHtml(item.device_name)}</td>
+            <td><strong>${escapeHtml(item.query)}</strong></td>
+            <td>${item.intercepted ? '<span class="badge ok">已拦截接管</span>' : '<span class="badge">小爱原生</span>'}</td>
+            <td>${item.intercepted ? `${escapeHtml(item.command_type)} (${escapeHtml(item.argument)}) → <strong>${escapeHtml(item.played_track)}</strong>` : escapeHtml(item.xiaoai_answer || '-')}</td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
+    async function testVoiceCommand(execute) {
+      const q = document.getElementById('voice-test-input').value.trim();
+      if (!q) return;
+      const box = document.getElementById('voice-test-result');
+      box.textContent = execute ? '正在匹配并在音箱执行（若首次拉取音频需 2~6 秒）...' : '正在分析口令...';
+      try {
+        const res = await api('/api/voice/test', {
+          method: 'POST',
+          body: JSON.stringify({ device_id: currentDeviceId, query: q, execute })
+        });
+        if (res.matched) {
+          let html = `✅ <strong>命中口令！</strong> 类型: <code>${res.command_type}</code> | 触发词: <code>${res.keyword}</code> (${res.source}) | 提取参数: <strong>${escapeHtml(res.argument)}</strong>`;
+          if (res.error) {
+            html += `<br/><span style="color:#ef4444;">❌ 执行出错: ${escapeHtml(res.error)}</span>`;
+          } else if (res.played) {
+            html += ` | 🎵 执行结果: <strong style="color:#34d399;">${escapeHtml(res.played)}</strong>`;
+          }
+          box.innerHTML = html;
+        } else {
+          box.innerHTML = `⚪ 未命中音乐口令：${escapeHtml(res.note)}`;
+        }
+        if (execute) refreshStatus();
+      } catch (e) {
+        box.textContent = '测试失败: ' + e.message;
+      }
+    }
+
+    // ---- Settings ----
+
+    async function loadConfig() {
+      try {
+        const cfg = await api('/api/config');
+        document.getElementById('cfg-lan-ip').value = cfg.lan_ip || cfg.effective_lan_ip || '';
+        document.getElementById('cfg-proxy').value = cfg.ytmusic_proxy || '';
+        document.getElementById('cfg-poll').value = cfg.poll_interval || 2.0;
+        document.getElementById('cfg-cache-mb').value = cfg.max_cache_mb || 1024;
+        document.getElementById('cfg-voice-enabled').checked = !!cfg.voice_enabled;
+        document.getElementById('cfg-prefetch').checked = !!cfg.prefetch_next;
+        document.getElementById('cfg-lyrics').checked = !!cfg.touchscreen_lyrics;
+        document.getElementById('cfg-dlna').checked = !!cfg.dlna_enabled;
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
+    async function saveSettings() {
+      try {
+        await api('/api/config', {
+          method: 'PUT',
+          body: JSON.stringify({
+            lan_ip: document.getElementById('cfg-lan-ip').value.trim(),
+            ytmusic_proxy: document.getElementById('cfg-proxy').value.trim(),
+            poll_interval: parseFloat(document.getElementById('cfg-poll').value) || 2.0,
+            max_cache_mb: parseInt(document.getElementById('cfg-cache-mb').value, 10) || 1024,
+            voice_enabled: document.getElementById('cfg-voice-enabled').checked,
+            prefetch_next: document.getElementById('cfg-prefetch').checked,
+            touchscreen_lyrics: document.getElementById('cfg-lyrics').checked,
+            dlna_enabled: document.getElementById('cfg-dlna').checked,
+          })
+        });
+        showToast('系统配置已保存并立即生效');
+        refreshStatus();
+      } catch (e) {
+        showToast('保存失败: ' + e.message);
+      }
+    }
+
+    async function clearAudioCache() {
+      try {
+        const res = await api('/api/cache/clear', { method: 'POST' });
+        showToast(`已清理 ${res.removed} 首缓存音频文件`);
+        refreshStatus();
+      } catch (e) {
+        showToast('清理失败: ' + e.message);
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    loadDevices(false);
+    loadPlaylists();
+    refreshStatus();
+    setInterval(refreshStatus, 4000);
+    setInterval(loadPlaylists, 15000);
+  </script>
+</body>
+</html>

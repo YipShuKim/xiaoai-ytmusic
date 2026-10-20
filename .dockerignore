@@ -1,0 +1,13 @@
+.git
+.gitignore
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+data/
+tests/
+*.md
+.env
+*.tar
+*.tar.gz
